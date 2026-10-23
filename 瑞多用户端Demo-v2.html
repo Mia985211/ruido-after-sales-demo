@@ -1,0 +1,1260 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>瑞多服务 · 用户端 V2</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+            background: #f5f7fa;
+            color: #1a2a3a;
+            min-height: 100vh;
+        }
+
+        /* Status Bar */
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 24px 6px;
+            font-size: 14px;
+            font-weight: 600;
+            background: #fff;
+        }
+
+        .status-icons { display: flex; gap: 6px; font-size: 13px; }
+
+        /* Nav Bar */
+        .nav-bar {
+            display: flex;
+            align-items: center;
+            padding: 10px 16px;
+            background: #fff;
+            border-bottom: 1px solid #f0f2f5;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav-back {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            color: #1a3a5c;
+            cursor: pointer;
+            border: none;
+            background: none;
+            display: none;
+        }
+
+        .nav-back.visible { display: flex; }
+
+        .nav-title {
+            flex: 1;
+            text-align: center;
+            font-size: 17px;
+            font-weight: 600;
+            color: #1a3a5c;
+        }
+
+        .nav-placeholder { width: 32px; }
+        .nav-right { font-size: 13px; color: #4a90d9; cursor: pointer; white-space: nowrap; min-width: 32px; text-align: right; }
+
+        /* Pages */
+        .page { display: none; min-height: calc(100vh - 60px); }
+        .page.active { display: block; }
+
+        /* ===== Service Center ===== */
+        .sc-banner {
+            background: linear-gradient(180deg, #dce8f5 0%, #f5f8fc 100%);
+            padding: 28px 20px 24px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .sc-brand { font-size: 12px; letter-spacing: 2px; color: #7a8d9f; margin-bottom: 10px; }
+        .sc-title { font-size: 26px; font-weight: 800; color: #1a3a5c; margin-bottom: 6px; }
+        .sc-subtitle { font-size: 14px; color: #6b7c8d; margin-bottom: 18px; }
+
+        .sc-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #fff;
+            border: 1px solid #d4e0ec;
+            border-radius: 20px;
+            padding: 6px 14px;
+            font-size: 12px;
+            color: #4a5568;
+        }
+
+        .sc-tag-icon { font-size: 14px; }
+
+        .sc-chair {
+            position: absolute;
+            right: 16px;
+            top: 24px;
+            width: 120px;
+            height: 120px;
+        }
+
+        /* Cards */
+        .card {
+            margin: 0 16px 14px;
+            background: #fff;
+            border-radius: 14px;
+            padding: 20px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+        }
+
+        .card-title { font-size: 16px; font-weight: 700; color: #1a3a5c; margin-bottom: 18px; }
+
+        /* Service Options */
+        .service-grid { display: flex; justify-content: space-around; }
+
+        .service-item { text-align: center; cursor: pointer; }
+
+        .service-icon {
+            width: 60px; height: 60px; border-radius: 16px;
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 10px; font-size: 26px;
+        }
+
+        .service-icon.blue { background: #e8f0fe; }
+        .service-icon.green { background: #e6f4ea; }
+
+        .service-name { font-size: 15px; font-weight: 600; color: #1a3a5c; margin-bottom: 3px; }
+        .service-desc { font-size: 12px; color: #8a9bab; }
+
+        /* List Row */
+        .list-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 0;
+            cursor: pointer;
+        }
+
+        .list-row + .list-row { border-top: 1px solid #f5f7fa; }
+
+        .list-icon {
+            width: 42px; height: 42px; border-radius: 50%;
+            background: #e8f0fe; display: flex;
+            align-items: center; justify-content: center;
+            font-size: 18px; flex-shrink: 0;
+        }
+
+        .list-info { flex: 1; }
+        .list-name { font-size: 15px; font-weight: 600; color: #1a3a5c; margin-bottom: 2px; }
+        .list-desc { font-size: 12px; color: #8a9bab; }
+        .list-arrow { font-size: 18px; color: #c0c8d0; }
+
+        /* Recent Orders */
+        .order-row {
+            display: flex;
+            align-items: center;
+            padding: 12px 0;
+            border-top: 1px solid #f5f7fa;
+        }
+
+        .order-info { flex: 1; }
+        .order-id { font-size: 13px; color: #4a5568; margin-bottom: 3px; }
+        .order-status { font-size: 11px; color: #8a9bab; }
+        .order-arrow { color: #c0c8d0; font-size: 16px; }
+
+        /* ===== Pricing Page ===== */
+        .pricing-tabs {
+            display: flex;
+            background: #fff;
+            border-bottom: 1px solid #f0f2f5;
+        }
+
+        .p-tab {
+            flex: 1;
+            text-align: center;
+            padding: 14px 0;
+            font-size: 15px;
+            color: #8a9bab;
+            cursor: pointer;
+            position: relative;
+            transition: color 0.2s;
+        }
+
+        .p-tab.active { color: #1a3a5c; font-weight: 600; }
+        .p-tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0; left: 50%; transform: translateX(-50%);
+            width: 36px; height: 3px; background: #1a3a5c; border-radius: 2px;
+        }
+
+        .p-content { padding: 24px 16px; }
+        .p-section-title { font-size: 16px; font-weight: 700; color: #1a3a5c; text-align: center; margin-bottom: 22px; }
+
+        /* Warranty badges */
+        .warranty-list { margin-bottom: 24px; }
+        .warranty-item {
+            display: flex; align-items: center; gap: 10px;
+            font-size: 14px; color: #4a5568; margin-bottom: 10px;
+        }
+        .w-icon {
+            width: 22px; height: 22px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 12px; font-weight: bold; flex-shrink: 0;
+        }
+        .w-icon.ok { background: #e6f4ea; color: #34a853; }
+        .w-icon.no { background: #fce8e6; color: #ea4335; }
+        .warranty-link { font-size: 13px; color: #4a90d9; margin-left: 32px; cursor: pointer; }
+
+        /* Fee list */
+        .fee-group { margin-bottom: 20px; }
+        .fee-group-title { font-size: 14px; font-weight: 600; color: #1a3a5c; margin-bottom: 10px; }
+        .fee-row {
+            display: flex; justify-content: space-between;
+            padding: 10px 0; border-bottom: 1px solid #f5f7fa; font-size: 13px;
+        }
+        .fee-label { color: #5a6a7a; }
+        .fee-val { color: #1a3a5c; font-weight: 600; }
+
+        /* Table */
+        .price-table { width: 100%; border-collapse: collapse; margin-bottom: 14px; font-size: 13px; }
+        .price-table th { background: #f0f4f8; padding: 10px 8px; font-weight: 600; color: #1a3a5c; border: 1px solid #e4e9ef; text-align: center; }
+        .price-table td { padding: 10px 8px; text-align: center; border: 1px solid #e4e9ef; color: #4a5568; }
+        .price-table .rh { font-weight: 600; color: #1a3a5c; text-align: left; }
+
+        /* Notes */
+        .p-note { font-size: 12px; color: #8a9bab; line-height: 1.7; margin-bottom: 18px; }
+        .p-notice { background: #f8fafc; border-radius: 10px; padding: 14px; margin-bottom: 18px; }
+        .p-notice-title { font-size: 13px; font-weight: 600; color: #1a3a5c; margin-bottom: 8px; }
+        .p-notice p { font-size: 12px; color: #4a5568; line-height: 1.8; margin-bottom: 4px; }
+
+        /* ===== Apply Page ===== */
+        .apply-form { padding: 20px 16px; }
+
+        .form-group { margin-bottom: 18px; }
+        .form-label { font-size: 14px; font-weight: 600; color: #1a3a5c; margin-bottom: 8px; }
+
+        .form-input {
+            width: 100%; padding: 12px 14px;
+            border: 1.5px solid #d4e0ec; border-radius: 10px;
+            font-size: 14px; color: #1a3a5c; background: #fff;
+            outline: none; transition: border-color 0.2s;
+        }
+
+        .form-input:focus { border-color: #4a90d9; }
+        .form-textarea { min-height: 80px; resize: vertical; }
+
+        .form-radio-group { display: flex; gap: 12px; }
+        .form-radio {
+            flex: 1; padding: 12px; border: 1.5px solid #d4e0ec;
+            border-radius: 10px; text-align: center; font-size: 14px;
+            color: #5a6a7a; cursor: pointer; transition: all 0.2s;
+        }
+        .form-radio.selected { border-color: #1a3a5c; color: #1a3a5c; background: #f0f4f8; font-weight: 600; }
+
+        .submit-btn {
+            width: 100%; padding: 14px; border: none; border-radius: 12px;
+            background: #1a3a5c; color: #fff; font-size: 16px;
+            font-weight: 600; cursor: pointer; margin-top: 8px;
+            transition: background 0.2s;
+        }
+        .submit-btn:hover { background: #2a4a6c; }
+        .submit-btn:disabled { background: #c0c8d0; cursor: not-allowed; }
+
+        /* Progress Page */
+        .progress-list { padding: 16px; }
+
+        .progress-item {
+            background: #fff; border-radius: 14px; padding: 16px;
+            margin-bottom: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+        }
+
+        .pi-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .pi-id { font-size: 13px; color: #4a5568; }
+        .pi-status { font-size: 12px; padding: 3px 10px; border-radius: 12px; font-weight: 500; }
+        .pi-status.ongoing { background: #e8f0fe; color: #4a90d9; }
+        .pi-status.done { background: #e6f4ea; color: #34a853; }
+        .pi-status.wait { background: #fef7e0; color: #e8a000; }
+
+        .pi-detail { font-size: 12px; color: #8a9bab; margin-bottom: 4px; }
+
+        .pi-timeline { display: flex; align-items: center; gap: 4px; margin-top: 12px; }
+        .tl-dot { width: 8px; height: 8px; border-radius: 50%; background: #d4e0ec; }
+        .tl-dot.active { background: #4a90d9; }
+        .tl-dot.done { background: #34a853; }
+        .tl-line { flex: 1; height: 2px; background: #e4e9ef; }
+        .tl-line.done { background: #34a853; }
+
+        /* Parts Page */
+        .parts-list { padding: 16px; }
+
+        .part-item {
+            background: #fff; border-radius: 12px; padding: 14px 16px;
+            margin-bottom: 10px; display: flex; align-items: center;
+            gap: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+        }
+
+        .part-icon {
+            width: 40px; height: 40px; border-radius: 10px;
+            background: #f0f4f8; display: flex;
+            align-items: center; justify-content: center; font-size: 18px;
+        }
+
+        .part-info { flex: 1; }
+        .part-name { font-size: 14px; font-weight: 600; color: #1a3a5c; margin-bottom: 2px; }
+        .part-spec { font-size: 12px; color: #8a9bab; }
+        .part-price { font-size: 15px; font-weight: 700; color: #e74c3c; }
+
+        /* Responsive */
+        @media (min-width: 500px) {
+            body { background: #e8edf2; }
+            .app-container {
+                width: 375px; min-height: 750px; background: #fff;
+                border-radius: 40px; border: 8px solid #1a2a3a;
+                overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+                flex-shrink: 0;
+            }
+        }
+
+        @media (max-width: 499px) {
+            .layout { padding: 0; }
+            .app-container { width: 100%; min-height: 100vh; }
+        }
+
+        /* Sub Tabs */
+        .sub-tabs { display: flex; background: #fff; border-bottom: 1px solid #f0f2f5; }
+        .sub-tab { flex: 1; text-align: center; padding: 14px 0; font-size: 15px; color: #8a9bab; cursor: pointer; position: relative; }
+        .sub-tab.active { color: #1a3a5c; font-weight: 600; }
+        .sub-tab.active::after { content: ''; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 40px; height: 3px; background: #1a3a5c; border-radius: 2px; }
+
+        /* Form Fields */
+        .field-row { display: flex; align-items: center; padding: 16px 0; border-bottom: 1px solid #f5f7fa; }
+        .field-label { font-size: 14px; font-weight: 600; color: #1a3a5c; white-space: nowrap; min-width: 80px; }
+        .required { color: #e74c3c; margin-right: 2px; }
+        .field-input-wrap { flex: 1; display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
+        .field-input { border: none; outline: none; font-size: 14px; color: #1a3a5c; text-align: right; flex: 1; background: transparent; }
+        .field-input::placeholder { color: #b8c4d0; }
+        .field-placeholder { font-size: 14px; color: #b8c4d0; }
+        .field-arrow { font-size: 18px; color: #c0c8d0; }
+        .scan-btn { width: 32px; height: 32px; border-radius: 50%; background: #4a90d9; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 18px; cursor: pointer; flex-shrink: 0; }
+
+        .form-section { padding: 16px 0; }
+        .textarea-wrap { position: relative; }
+        .field-textarea { width: 100%; min-height: 100px; padding: 12px; border: 1px solid #f0f2f5; border-radius: 8px; font-size: 14px; color: #1a3a5c; background: #f8fafc; resize: none; outline: none; }
+        .field-textarea::placeholder { color: #b8c4d0; }
+        .char-count { position: absolute; bottom: 10px; right: 12px; font-size: 12px; color: #b8c4d0; }
+        .upload-row { display: flex; gap: 10px; margin-top: 12px; }
+        .upload-box { width: 64px; height: 64px; border-radius: 8px; background: #f0f4f8; display: flex; align-items: center; justify-content: center; font-size: 22px; color: #8a9bab; cursor: pointer; border: 1px dashed #d4e0ec; }
+        .upload-hint { font-size: 12px; color: #8a9bab; margin-top: 8px; }
+
+        /* Records */
+        .records-list { padding: 16px; }
+        .record-card { background: #fff; border-radius: 14px; padding: 16px; margin-bottom: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.04); border: 1px solid #f0f2f5; }
+        .record-header { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+        .record-badge { width: 44px; height: 44px; border-radius: 8px; background: #4a90d9; color: #fff; font-size: 11px; font-weight: 600; display: flex; align-items: center; justify-content: center; text-align: center; line-height: 1.3; flex-shrink: 0; }
+        .record-model { font-size: 16px; font-weight: 700; color: #1a3a5c; }
+        .record-sn { font-size: 13px; color: #6b7c8d; margin-top: 2px; }
+        .record-field { display: flex; padding: 6px 0; font-size: 13px; border-top: 1px solid #f8fafc; }
+        .rf-label { color: #8a9bab; min-width: 70px; flex-shrink: 0; }
+        .rf-value { color: #1a3a5c; }
+
+        /* Relocate */
+        .relocate-notice { background: #fff9e6; padding: 12px 16px; display: flex; align-items: center; gap: 8px; font-size: 13px; color: #4a5568; border-bottom: 1px solid #f5f0d8; }
+        .rn-icon { color: #e8a000; font-size: 16px; font-weight: bold; }
+        .optional-section { margin-top: 24px; background: #f8fafc; border-radius: 12px; padding: 18px; }
+        .optional-title { font-size: 15px; font-weight: 700; color: #1a3a5c; margin-bottom: 4px; }
+        .optional-sub { font-size: 12px; color: #8a9bab; font-weight: 400; }
+        .optional-label { font-size: 14px; font-weight: 600; color: #1a3a5c; margin: 14px 0 8px; }
+        .optional-hint { font-size: 12px; color: #8a9bab; font-weight: 400; }
+
+        /* Layout: phone + doc panel */
+        .layout { display: flex; gap: 48px; align-items: flex-start; justify-content: center; padding: 40px 24px; }
+        .doc-panel {
+            width: 560px; max-width: 90vw; background: #fff; border-radius: 16px;
+            border: 1px solid #e4e9ef; padding: 32px 36px;
+            max-height: calc(100vh - 80px); overflow-y: auto;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+            position: sticky; top: 40px;
+        }
+        .doc-panel h1 { font-size: 20px; color: #1a3a5c; margin-bottom: 6px; }
+        .doc-panel .doc-meta { font-size: 12px; color: #8a9bab; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid #f0f2f5; }
+        .doc-panel h2 { font-size: 16px; color: #1a3a5c; margin: 24px 0 10px; padding-left: 10px; border-left: 3px solid #4a90d9; }
+        .doc-panel h3 { font-size: 14px; color: #1a3a5c; margin: 16px 0 8px; }
+        .doc-panel p, .doc-panel li { font-size: 13px; color: #4a5568; line-height: 1.8; }
+        .doc-panel ul { padding-left: 18px; margin-bottom: 10px; }
+        .doc-panel table { width: 100%; border-collapse: collapse; margin: 10px 0 16px; font-size: 12px; }
+        .doc-panel th { background: #f0f4f8; color: #1a3a5c; font-weight: 600; padding: 8px; border: 1px solid #e4e9ef; text-align: left; }
+        .doc-panel td { padding: 8px; border: 1px solid #e4e9ef; color: #4a5568; }
+        .doc-panel .tag { display: inline-block; background: #e8f0fe; color: #4a90d9; font-size: 11px; padding: 1px 8px; border-radius: 4px; margin-right: 6px; }
+        @media (max-width: 1080px) {
+            .layout { flex-direction: column; align-items: center; }
+            .doc-panel { position: static; max-height: none; width: 375px; }
+        }
+
+        /* V2 New Styles */
+        /* Status Badge */
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .status-badge.processing { background: #e8f0fe; color: #4a90d9; }
+        .status-badge.completed { background: #e6f4ea; color: #34a853; }
+        .status-badge.pending { background: #fef7e0; color: #e8a000; }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+        }
+        .empty-icon { font-size: 64px; margin-bottom: 16px; opacity: 0.5; }
+        .empty-text { font-size: 15px; color: #8a9bab; margin-bottom: 20px; }
+        .empty-btn {
+            display: inline-block;
+            padding: 10px 24px;
+            background: #4a90d9;
+            color: #fff;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(26, 58, 92, 0.95);
+            color: #fff;
+            padding: 16px 32px;
+            border-radius: 12px;
+            font-size: 14px;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .toast.show { opacity: 1; }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 999;
+        }
+        .modal-overlay.show { display: flex; }
+        .modal {
+            background: #fff;
+            border-radius: 16px;
+            padding: 24px;
+            max-width: 320px;
+            width: 90%;
+            text-align: center;
+        }
+        .modal-icon { font-size: 48px; margin-bottom: 16px; }
+        .modal-title { font-size: 18px; font-weight: 700; color: #1a3a5c; margin-bottom: 8px; }
+        .modal-text { font-size: 14px; color: #6b7c8d; margin-bottom: 20px; line-height: 1.6; }
+        .modal-btn {
+            width: 100%;
+            padding: 12px;
+            background: #1a3a5c;
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* Warranty Card */
+        .warranty-card {
+            margin: 16px;
+            background: linear-gradient(135deg, #e8f0fe 0%, #f0f4f8 100%);
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+        }
+        .warranty-icon { font-size: 32px; }
+        .warranty-info { flex: 1; }
+        .warranty-title { font-size: 14px; font-weight: 700; color: #1a3a5c; margin-bottom: 4px; }
+        .warranty-desc { font-size: 12px; color: #6b7c8d; }
+
+        /* Progress Timeline */
+        .progress-timeline {
+            padding: 20px 16px;
+        }
+        .timeline-item {
+            display: flex;
+            gap: 12px;
+            padding-bottom: 20px;
+            position: relative;
+        }
+        .timeline-item:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            left: 15px;
+            top: 32px;
+            bottom: 0;
+            width: 2px;
+            background: #e4e9ef;
+        }
+        .timeline-item.completed::after { background: #34a853; }
+        .timeline-dot {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #f0f4f8;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+        .timeline-item.completed .timeline-dot { background: #e6f4ea; color: #34a853; }
+        .timeline-item.active .timeline-dot { background: #e8f0fe; color: #4a90d9; }
+        .timeline-content { flex: 1; }
+        .timeline-title { font-size: 14px; font-weight: 600; color: #1a3a5c; margin-bottom: 4px; }
+        .timeline-desc { font-size: 12px; color: #8a9bab; }
+        .timeline-time { font-size: 11px; color: #b8c4d0; margin-top: 4px; }
+
+        /* Image Preview */
+        .image-preview {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 12px;
+        }
+        .preview-item {
+            width: 64px;
+            height: 64px;
+            border-radius: 8px;
+            background: #f0f4f8;
+            position: relative;
+            overflow: hidden;
+        }
+        .preview-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .preview-remove {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            width: 18px;
+            height: 18px;
+            background: rgba(0,0,0,0.5);
+            color: #fff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+<div class="layout">
+<div class="app-container">
+    <!-- Status Bar -->
+    <div class="status-bar">
+        <span>17:17</span>
+        <div class="status-icons"><span>📶</span><span>4G</span><span>🔋</span></div>
+    </div>
+
+    <!-- Nav Bar -->
+    <div class="nav-bar">
+        <button class="nav-back" id="navBack" onclick="goBack()">‹</button>
+        <div class="nav-title" id="navTitle">瑞多服务</div>
+        <div class="nav-right" id="navRight" style="display:none;" onclick="navigateTo('pricing')">收费标准</div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <!-- Modal -->
+    <div class="modal-overlay" id="modal">
+        <div class="modal">
+            <div class="modal-icon">✓</div>
+            <div class="modal-title" id="modalTitle">提交成功</div>
+            <div class="modal-text" id="modalText">您的报修申请已提交,我们将尽快为您处理。</div>
+            <button class="modal-btn" onclick="closeModal()">确定</button>
+        </div>
+    </div>
+
+    <!-- Page: Service Center -->
+    <div class="page active" id="page-home">
+        <div class="sc-banner">
+            <div class="sc-brand">RU DO · 瑞多服务</div>
+            <div class="sc-title">服务中心</div>
+            <div class="sc-subtitle">您的每一份安心,我们都在意。</div>
+            <div class="sc-tag"><span class="sc-tag-icon">🛡️</span> 服务全程可追踪</div>
+            <div class="sc-chair">
+                <svg viewBox="0 0 120 120" fill="none">
+                    <rect x="30" y="15" width="55" height="75" rx="8" stroke="#1a3a5c" stroke-width="2" fill="#dce8f5"/>
+                    <rect x="36" y="22" width="43" height="28" rx="4" fill="#b8d4f0"/>
+                    <path d="M40 58 Q55 52 72 58" stroke="#1a3a5c" stroke-width="1.5" fill="none"/>
+                    <rect x="38" y="66" width="38" height="7" rx="3.5" fill="#a8c8e8"/>
+                    <rect x="38" y="77" width="38" height="7" rx="3.5" fill="#a8c8e8"/>
+                    <path d="M25 95 L90 95" stroke="#1a3a5c" stroke-width="2" stroke-linecap="round"/>
+                    <rect x="22" y="35" width="7" height="18" rx="3.5" fill="#b8d4f0"/>
+                    <rect x="86" y="35" width="7" height="18" rx="3.5" fill="#b8d4f0"/>
+                    <circle cx="57" cy="10" r="3.5" fill="#4a90d9"/>
+                </svg>
+            </div>
+        </div>
+
+        <!-- V2: 保修规则入口 -->
+        <div class="warranty-card" onclick="showToast('保修规则详情页开发中')">
+            <div class="warranty-icon">📋</div>
+            <div class="warranty-info">
+                <div class="warranty-title">保修规则说明</div>
+                <div class="warranty-desc">查看质保服务范围与保修期限</div>
+            </div>
+            <div class="list-arrow">›</div>
+        </div>
+
+        <!-- 服务申请 -->
+        <div class="card">
+            <div class="card-title">服务申请</div>
+            <div class="service-grid">
+                <div class="service-item" onclick="navigateTo('apply-repair')">
+                    <div class="service-icon blue">🔧</div>
+                    <div class="service-name">维修服务</div>
+                    <div class="service-desc">故障维修 / 付费保养</div>
+                </div>
+                <div class="service-item" onclick="navigateTo('apply-relocate')">
+                    <div class="service-icon green">🚚</div>
+                    <div class="service-name">移机服务</div>
+                    <div class="service-desc">搬家移机 / 室内移位</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- V2: 最近订单 -->
+        <div class="card">
+            <div class="card-title">最近订单</div>
+            <div class="order-row" onclick="navigateTo('progress')">
+                <div class="order-info">
+                    <div class="order-id">工单号: WX20261008001</div>
+                    <div class="order-status">维修中 · 预计今日上门</div>
+                </div>
+                <div class="order-arrow">›</div>
+            </div>
+            <div class="order-row" onclick="navigateTo('progress')">
+                <div class="order-info">
+                    <div class="order-id">工单号: YJ20260920002</div>
+                    <div class="order-status">已完成 · 2026-09-22</div>
+                </div>
+                <div class="order-arrow">›</div>
+            </div>
+        </div>
+
+        <!-- 维修记录 -->
+        <div class="card">
+            <div class="list-row" onclick="navigateTo('apply-repair'); setTimeout(() => document.querySelectorAll('.sub-tab')[1].click(), 100)">
+                <div class="list-icon">🕐</div>
+                <div class="list-info">
+                    <div class="list-name">维修记录</div>
+                    <div class="list-desc">查看历史报修记录与处理详情</div>
+                </div>
+                <div class="list-arrow">›</div>
+            </div>
+        </div>
+
+        <!-- 自助查询 -->
+        <div class="card">
+            <div class="card-title">自助查询</div>
+            <div class="list-row" onclick="navigateTo('pricing')">
+                <div class="list-icon">💰</div>
+                <div class="list-info">
+                    <div class="list-name">收费标准</div>
+                    <div class="list-desc">查看维修/移机收费指导价</div>
+                </div>
+                <div class="list-arrow">›</div>
+            </div>
+            <div class="list-row" onclick="navigateTo('parts')">
+                <div class="list-icon">📋</div>
+                <div class="list-info">
+                    <div class="list-name">配件价格</div>
+                    <div class="list-desc">查看配件信息与标准价格</div>
+                </div>
+                <div class="list-arrow">›</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- V2: Page: Progress -->
+    <div class="page" id="page-progress">
+        <div class="progress-timeline">
+            <div class="timeline-item completed">
+                <div class="timeline-dot">✓</div>
+                <div class="timeline-content">
+                    <div class="timeline-title">提交申请</div>
+                    <div class="timeline-desc">您的报修申请已提交成功</div>
+                    <div class="timeline-time">2026-10-08 15:53</div>
+                </div>
+            </div>
+            <div class="timeline-item completed">
+                <div class="timeline-dot">✓</div>
+                <div class="timeline-content">
+                    <div class="timeline-title">客服核实</div>
+                    <div class="timeline-desc">客服已核实设备故障情况</div>
+                    <div class="timeline-time">2026-10-08 16:30</div>
+                </div>
+            </div>
+            <div class="timeline-item completed">
+                <div class="timeline-dot">✓</div>
+                <div class="timeline-content">
+                    <div class="timeline-title">分配服务商</div>
+                    <div class="timeline-desc">已分配给上海浦东授权服务商</div>
+                    <div class="timeline-time">2026-10-08 17:00</div>
+                </div>
+            </div>
+            <div class="timeline-item active">
+                <div class="timeline-dot">◉</div>
+                <div class="timeline-content">
+                    <div class="timeline-title">上门服务</div>
+                    <div class="timeline-desc">工程师正在前往,预计今日 18:00 前到达</div>
+                    <div class="timeline-time">2026-10-09 进行中</div>
+                </div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-dot">○</div>
+                <div class="timeline-content">
+                    <div class="timeline-title">完成维修</div>
+                    <div class="timeline-desc">维修完成后请确认服务</div>
+                    <div class="timeline-time">待完成</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Page: Pricing -->
+    <div class="page" id="page-pricing">
+        <div class="pricing-tabs">
+            <div class="p-tab active" data-tab="repair">维修</div>
+            <div class="p-tab" data-tab="relocate">移机</div>
+        </div>
+
+        <!-- 维修 -->
+        <div class="p-content" id="ptab-repair">
+            <div class="warranty-list">
+                <div class="warranty-item"><div class="w-icon ok">✓</div><span>符合保修条件:维修免费</span></div>
+                <div class="warranty-item"><div class="w-icon no">✕</div><span>不符合保修条件:按标准收费</span></div>
+                <div class="warranty-link">查看《质保服务说明》</div>
+            </div>
+
+            <div class="p-section-title">维修收费:上门检测服务费 + 配件材料费</div>
+
+            <div class="p-notice">
+                <div class="p-notice-title">城市分类标准</div>
+                <p>A 类城市:北京、上海、广州、深圳</p>
+                <p>B 类城市:各省会城市及直辖市</p>
+                <p>C 类城市:除 A 类与 B 类之外的其他城市</p>
+            </div>
+
+            <table class="price-table">
+                <thead><tr><th>城市类别</th><th>上门检测服务费</th><th>配件材料费</th></tr></thead>
+                <tbody>
+                    <tr><td class="rh">A 类城市</td><td>400 元</td><td rowspan="3">价目明细可在瑞多 APP 查询</td></tr>
+                    <tr><td class="rh">B 类城市</td><td>300 元</td></tr>
+                    <tr><td class="rh">C 类城市</td><td>200 元</td></tr>
+                </tbody>
+            </table>
+
+            <div class="p-notice">
+                <div class="p-notice-title">说明:</div>
+                <p>上门检测服务费包含市内交通费、拆装机工时费、故障排查工时费、仪表工具折旧等费用。</p>
+                <p>配件材料费包含材料运费与配件更换工时费。</p>
+            </div>
+        </div>
+
+        <!-- 移机 -->
+        <div class="p-content" id="ptab-relocate" style="display:none;">
+            <div class="p-section-title">移机收费:机器拆装费 + 室外运输费</div>
+
+            <div class="p-notice">
+                <div class="p-notice-title">城市分类标准</div>
+                <p>A 类城市:北京、上海、广州、深圳</p>
+                <p>B 类城市:各省会城市及直辖市</p>
+                <p>C 类城市:除 A 类与 B 类之外的其他城市</p>
+            </div>
+
+            <table class="price-table">
+                <thead><tr><th>城市类别</th><th>机器拆装费</th><th>室外运输费</th></tr></thead>
+                <tbody>
+                    <tr><td class="rh">A 类城市</td><td>400 元</td><td rowspan="3" style="font-size:12px;">参考当地货运运营资费标准收取,<br>可与客户协商</td></tr>
+                    <tr><td class="rh">B 类城市</td><td>300 元</td></tr>
+                    <tr><td class="rh">C 类城市</td><td>200 元</td></tr>
+                </tbody>
+            </table>
+
+            <div class="p-notice">
+                <div class="p-notice-title">说明:</div>
+                <p>机器拆装费包含市内交通费、拆装机工时费。</p>
+                <p>室外运输费是指从现场地移至其他场地所产生的室外搬运费用,室内移机无室外运输费。</p>
+            </div>
+
+            <div class="p-notice">
+                <div class="p-notice-title">温馨提示:</div>
+                <p>移机前与安装好后,请与客户确认好产品外观与功能。</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Page: Parts -->
+    <div class="page" id="page-parts">
+        <div class="parts-list">
+            <div class="p-section-title" style="margin-bottom:16px;">配件价格参考</div>
+            <div class="part-item">
+                <div class="part-icon">🔌</div>
+                <div class="part-info"><div class="part-name">电源适配器</div><div class="part-spec">通用型号 · 原装</div></div>
+                <div class="part-price">¥80</div>
+            </div>
+            <div class="part-item">
+                <div class="part-icon">🎯</div>
+                <div class="part-info"><div class="part-name">按摩头组件</div><div class="part-spec">揉捏机芯 · 单组</div></div>
+                <div class="part-price">¥150</div>
+            </div>
+            <div class="part-item">
+                <div class="part-icon">💨</div>
+                <div class="part-info"><div class="part-name">气囊组件</div><div class="part-spec">手臂/腿部 · 单个</div></div>
+                <div class="part-price">¥120</div>
+            </div>
+            <div class="part-item">
+                <div class="part-icon">🛤️</div>
+                <div class="part-info"><div class="part-name">导轨滑块</div><div class="part-spec">S型/L型导轨用</div></div>
+                <div class="part-price">¥200</div>
+            </div>
+            <div class="part-item">
+                <div class="part-icon">🧤</div>
+                <div class="part-info"><div class="part-name">皮套/面料</div><div class="part-spec">按部位定制</div></div>
+                <div class="part-price">¥200起</div>
+            </div>
+            <div class="part-item">
+                <div class="part-icon">🎛️</div>
+                <div class="part-info"><div class="part-name">控制主板</div><div class="part-spec">整机主控 · 含固件</div></div>
+                <div class="part-price">¥450</div>
+            </div>
+            <div class="part-item">
+                <div class="part-icon">⚡</div>
+                <div class="part-info"><div class="part-name">电机</div><div class="part-spec">揉捏/敲击电机</div></div>
+                <div class="part-price">¥180</div>
+            </div>
+            <div class="p-note" style="margin-top:16px;">* 配件价格仅供参考,实际以工程师上门检测后的售后报价为准。</div>
+        </div>
+    </div>
+
+    <!-- Page: Apply Repair (设备报修) -->
+    <div class="page" id="page-apply-repair">
+        <div class="sub-tabs">
+            <div class="sub-tab active" data-subtab="repair-apply">我要报修</div>
+            <div class="sub-tab" data-subtab="repair-records">报修记录</div>
+        </div>
+
+        <!-- 我要报修 -->
+        <div class="sub-content" id="subtab-repair-apply">
+            <div class="apply-form">
+                <div class="field-row">
+                    <div class="field-label"><span class="required">*</span> SN码</div>
+                    <div class="field-input-wrap">
+                        <input class="field-input" id="snCode" placeholder="输入SN码,或扫设备二维码">
+                        <div class="scan-btn" onclick="simulateScan()">⊞</div>
+                    </div>
+                </div>
+                <div class="field-row">
+                    <div class="field-label"><span class="required">*</span> 设备型号</div>
+                    <div class="field-input-wrap">
+                        <input class="field-input" id="deviceModel" placeholder="输入型号,或扫设备二维码">
+                    </div>
+                </div>
+                <div class="field-row">
+                    <div class="field-label"><span class="required">*</span> 姓名</div>
+                    <div class="field-input-wrap">
+                        <input class="field-input" id="userName" placeholder="报修联系人姓名">
+                    </div>
+                </div>
+                <div class="field-row">
+                    <div class="field-label"><span class="required">*</span> 手机号码</div>
+                    <div class="field-input-wrap">
+                        <input class="field-input" id="userPhone" type="tel" placeholder="报修联系人手机" maxlength="11">
+                    </div>
+                </div>
+                <div class="field-row">
+                    <div class="field-label"><span class="required">*</span> 区域选择</div>
+                    <div class="field-input-wrap">
+                        <input class="field-input" id="regionSelect" placeholder="选择所在省市区" readonly onclick="showToast('区域选择器开发中')">
+                        <span class="field-arrow">›</span>
+                    </div>
+                </div>
+                <div class="field-row">
+                    <div class="field-label"><span class="required">*</span> 详细地址</div>
+                    <div class="field-input-wrap">
+                        <input class="field-input" id="address" placeholder="输入详细地址">
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <div class="field-label" style="margin-bottom:10px;"><span class="required">*</span> 问题描述</div>
+                    <div class="textarea-wrap">
+                        <textarea class="field-textarea" id="problemDesc" placeholder="请描述申请售后服务的具体原因" maxlength="200" oninput="updateCharCount()"></textarea>
+                        <div class="char-count" id="charCount">0/200</div>
+                    </div>
+                    <div class="upload-row">
+                        <div class="upload-box" onclick="simulateUpload()">📷</div>
+                    </div>
+                    <div class="upload-hint">添加照片/视频,视频不超过1分钟 (最多三张)</div>
+                    <div class="image-preview" id="imagePreview"></div>
+                </div>
+
+                <button class="submit-btn" onclick="submitRepairForm()">提交</button>
+            </div>
+        </div>
+
+        <!-- 报修记录 -->
+        <div class="sub-content" id="subtab-repair-records" style="display:none;">
+            <div class="records-list">
+                <div class="record-card">
+                    <div class="record-header">
+                        <div class="record-badge">报修<br>设备</div>
+                        <div class="record-device">
+                            <div class="record-model">G-200 <span class="status-badge processing">维修中</span></div>
+                            <div class="record-sn">SN:15110052</div>
+                        </div>
+                    </div>
+                    <div class="record-fields">
+                        <div class="record-field"><span class="rf-label">提交时间</span><span class="rf-value">2026-10-08 15:53:21</span></div>
+                        <div class="record-field"><span class="rf-label">姓 名</span><span class="rf-value">张</span></div>
+                        <div class="record-field"><span class="rf-label">手机号码</span><span class="rf-value">165****9294</span></div>
+                        <div class="record-field"><span class="rf-label">维修地址</span><span class="rf-value">上海市浦东新区张江路88号</span></div>
+                        <div class="record-field"><span class="rf-label">问题描述</span><span class="rf-value">导轨运行时有异响</span></div>
+                        <div class="record-field"><span class="rf-label">附件</span><span class="rf-value">—</span></div>
+                    </div>
+                </div>
+
+                <div class="record-card">
+                    <div class="record-header">
+                        <div class="record-badge">报修<br>设备</div>
+                        <div class="record-device">
+                            <div class="record-model">G-200 <span class="status-badge completed">已完成</span></div>
+                            <div class="record-sn">SN:15110052</div>
+                        </div>
+                    </div>
+                    <div class="record-fields">
+                        <div class="record-field"><span class="rf-label">提交时间</span><span class="rf-value">2026-09-20 15:48:28</span></div>
+                        <div class="record-field"><span class="rf-label">姓 名</span><span class="rf-value">李</span></div>
+                        <div class="record-field"><span class="rf-label">手机号码</span><span class="rf-value">150****0000</span></div>
+                        <div class="record-field"><span class="rf-label">维修地址</span><span class="rf-value">北京市朝阳区建国路12号</span></div>
+                        <div class="record-field"><span class="rf-label">问题描述</span><span class="rf-value">气囊不工作</span></div>
+                        <div class="record-field"><span class="rf-label">附件</span><span class="rf-value">—</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Page: Apply Relocate (移机服务) -->
+    <div class="page" id="page-apply-relocate">
+        <div class="relocate-notice">
+            <span class="rn-icon">ⓘ</span>
+            <span>有偿服务:产生的上门费、配件费将由您承担</span>
+        </div>
+
+        <div class="apply-form">
+            <div class="field-row">
+                <div class="field-label"><span class="required">*</span> 产品型号</div>
+                <div class="field-input-wrap">
+                    <span class="field-placeholder">请选择</span>
+                    <span class="field-arrow">›</span>
+                </div>
+            </div>
+            <div class="field-row">
+                <div class="field-label"><span class="required">*</span> 期望服务时间</div>
+                <div class="field-input-wrap">
+                    <span class="field-placeholder">请选择</span>
+                    <span class="field-arrow">›</span>
+                </div>
+            </div>
+            <div class="field-row">
+                <div class="field-label"><span class="required">*</span> 上门地址</div>
+                <div class="field-input-wrap">
+                    <span class="field-placeholder">请选择</span>
+                    <span class="field-arrow">›</span>
+                </div>
+            </div>
+            <div class="field-row">
+                <div class="field-label"><span class="required">*</span> 安装地址</div>
+                <div class="field-input-wrap">
+                    <span class="field-placeholder">请选择</span>
+                    <span class="field-arrow">›</span>
+                </div>
+            </div>
+
+            <div class="optional-section">
+                <div class="optional-title">选填信息 <span class="optional-sub">(填写有助于为您提供更好的服务)</span></div>
+                <div class="optional-label">移机环境图片 <span class="optional-hint">最多上传4张图</span></div>
+                <div class="upload-row">
+                    <div class="upload-box" onclick="simulateUpload()">+</div>
+                </div>
+                <div class="textarea-wrap" style="margin-top:14px;">
+                    <textarea class="field-textarea" placeholder="请补充填写是否有电梯以及楼层层高等相关信息" maxlength="120" oninput="this.nextElementSibling.textContent=this.value.length+'/120'"></textarea>
+                    <div class="char-count">0/120</div>
+                </div>
+            </div>
+
+            <button class="submit-btn" onclick="submitRelocateForm()">提交</button>
+        </div>
+    </div>
+</div>
+
+<!-- 需求文档面板 -->
+<aside class="doc-panel">
+    <h1>瑞多售后服务 · 用户端需求文档 V2</h1>
+    <div class="doc-meta">方案 B · V3.4 | 2026-10-12 | 适用主体:上海荣泰健康科技股份有限公司 / 上海一诺康品电子商务有限公司 / 上海艾荣达健身科技股份有限公司(品牌摩摩哒)</div>
+
+    <h2>一、产品概述</h2>
+    <p>为用户提供移动端自助售后入口,实现三个目标:</p>
+    <ul>
+        <li><strong>服务申请线上化</strong>:自助提交维修(设备报修)与移机申请,减少人工客服介入;</li>
+        <li><strong>收费透明化</strong>:收费标准、配件价格公开可查,降低费用纠纷;</li>
+        <li><strong>全程可追踪</strong>:报修记录与处理详情可查询,提升服务体验。</li>
+    </ul>
+
+    <h2>二、功能架构</h2>
+    <ul>
+        <li>服务申请 → 维修服务(设备报修页:我要报修 / 报修记录)、移机服务</li>
+        <li>维修记录 → 设备报修页,默认停在「报修记录」标签</li>
+        <li>自助查询 → 收费标准(维修/移机)、配件价格</li>
+    </ul>
+    <p>维修申请与维修记录共用一个页面,通过标签切换,两个入口只是默认标签不同,降低用户理解成本。</p>
+
+    <h2>三、页面需求</h2>
+
+    <h3>3.1 设备报修(我要报修)</h3>
+    <table>
+        <tr><th>字段</th><th>必填</th><th>说明</th></tr>
+        <tr><td>SN码</td><td>是</td><td>手动输入或扫设备二维码</td></tr>
+        <tr><td>设备型号</td><td>是</td><td>手动输入或扫码带出</td></tr>
+        <tr><td>姓名 / 手机号码</td><td>是</td><td>报修联系人,手机号格式校验</td></tr>
+        <tr><td>区域选择</td><td>是</td><td>省 / 市 / 区三级联动</td></tr>
+        <tr><td>详细地址</td><td>是</td><td>门牌号等</td></tr>
+        <tr><td>问题描述</td><td>是</td><td>上限 200 字,实时字数</td></tr>
+        <tr><td>附件</td><td>否</td><td>最多 3 张,视频不超过 1 分钟</td></tr>
+    </table>
+    <p>提交后生成维修工单,进入后台流程:客服核实 → 系统按区域自动分配服务商 → 服务商承接 → 上门履约 → 完成。</p>
+
+    <h3>3.2 报修记录</h3>
+    <p>按提交时间倒序展示历史报修单;卡片字段:型号、SN、提交时间、姓名、手机号码(脱敏)、维修地址、问题描述、附件;点击进入详情及处理状态。</p>
+
+    <h3>3.3 移机服务</h3>
+    <p><span class="tag">提示条</span>「有偿服务:产生的上门费、配件费将由您承担」,右上角提供收费标准快捷入口。</p>
+    <table>
+        <tr><th>字段</th><th>必填</th><th>说明</th></tr>
+        <tr><td>产品型号</td><td>是</td><td>选择器</td></tr>
+        <tr><td>期望服务时间</td><td>是</td><td>日期时间选择</td></tr>
+        <tr><td>上门地址</td><td>是</td><td>机器当前所在地</td></tr>
+        <tr><td>安装地址</td><td>是</td><td>机器移至的目的地</td></tr>
+        <tr><td>移机环境图片</td><td>否</td><td>最多 4 张,预判搬运环境</td></tr>
+        <tr><td>补充说明</td><td>否</td><td>120 字,是否有电梯/楼层层高</td></tr>
+    </table>
+
+    <h3>3.4 收费标准</h3>
+    <p><span class="tag">城市分类</span>A 类:北京、上海、广州、深圳;B 类:各省会城市及直辖市;C 类:其他城市。</p>
+    <p><strong>维修收费 = 上门检测服务费 + 配件材料费</strong></p>
+    <table>
+        <tr><th>城市类别</th><th>上门检测服务费</th><th>配件材料费</th></tr>
+        <tr><td>A 类</td><td>400 元</td><td rowspan="3">价目明细可在瑞多 APP 查询</td></tr>
+        <tr><td>B 类</td><td>300 元</td></tr>
+        <tr><td>C 类</td><td>200 元</td></tr>
+    </table>
+    <p>保修规则:符合保修条件免费;不符合按上表收费。上门检测服务费含市内交通费、拆装机工时费、故障排查工时费、仪表工具折旧;配件材料费含材料运费与更换工时费。</p>
+    <p><strong>移机收费 = 机器拆装费 + 室外运输费</strong></p>
+    <table>
+        <tr><th>城市类别</th><th>机器拆装费</th><th>室外运输费</th></tr>
+        <tr><td>A 类</td><td>400 元</td><td rowspan="3">参考当地货运运营资费标准收取,可与客户协商</td></tr>
+        <tr><td>B 类</td><td>300 元</td></tr>
+        <tr><td>C 类</td><td>200 元</td></tr>
+    </table>
+    <p>室内移机无室外运输费。温馨提示:移机前与安装好后,与客户确认产品外观与功能。</p>
+
+    <h3>3.5 配件价格</h3>
+    <p>展示常用配件名称、规格与参考价;底部固定声明:价格仅供参考,实际以工程师上门检测后的售后报价为准。</p>
+
+    <h2>四、核心业务规则</h2>
+    <ul>
+        <li>正常工单自动直达当地服务商,无需逐单审批;异常与改派由区域经理后台处理;</li>
+        <li>保修判定在客服核实环节完成;</li>
+        <li>收费按 A/B/C 城市分类,以服务地址所在区域为准;</li>
+        <li>移机为有偿服务,下单页明确告知费用承担方;</li>
+        <li>个人信息在记录列表中脱敏展示。</li>
+    </ul>
+
+    <h2>五、后续迭代(不在本期)</h2>
+    <p>服务进度时间线与消息推送、在线支付、服务评价与回访、我的设备管理。</p>
+
+    <h2>六、验收标准</h2>
+    <ul>
+        <li>用户可在 3 步内完成一次报修提交;</li>
+        <li>报修记录字段完整、脱敏正确;</li>
+        <li>收费标准金额与城市分类和本文档完全一致,无保养标签;</li>
+        <li>375px 宽度下无横向滚动、无错位。</li>
+    </ul>
+
+    <h2 style="color: #34a853;">V2 新增功能</h2>
+    <ul>
+        <li><strong>保修规则入口</strong>:首页新增保修规则说明卡片,方便用户快速了解保修政策;</li>
+        <li><strong>最近订单</strong>:首页展示最近工单,快速查看服务进度;</li>
+        <li><strong>服务进度追踪</strong>:新增进度页面,以时间线形式展示工单处理节点;</li>
+        <li><strong>状态标签</strong>:报修记录增加状态标签(维修中/已完成),一目了然;</li>
+        <li><strong>表单验证</strong>:手机号格式校验、必填项验证、字数统计优化;</li>
+        <li><strong>交互反馈</strong>:扫码模拟、图片上传预览、提交成功弹窗提示;</li>
+        <li><strong>空状态设计</strong>:无记录时展示友好提示与引导按钮。</li>
+    </ul>
+</aside>
+</div>
+
+<script>
+    let currentPage = 'home';
+    const titles = { home: '瑞多服务', pricing: '收费标准', parts: '配件价格', 'apply-repair': '设备报修', 'apply-relocate': '移机服务', progress: '服务进度' };
+
+    function navigateTo(page) {
+        document.getElementById('page-' + currentPage).classList.remove('active');
+        document.getElementById('page-' + page).classList.add('active');
+        currentPage = page;
+        document.getElementById('navTitle').textContent = titles[page] || '瑞多服务';
+        document.getElementById('navBack').classList.toggle('visible', page !== 'home');
+        document.getElementById('navRight').style.display = page === 'apply-relocate' ? 'block' : 'none';
+    }
+
+    function goBack() { navigateTo('home'); }
+
+    // Pricing tabs
+    document.querySelectorAll('.p-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            document.querySelectorAll('.p-tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            document.querySelectorAll('.p-content').forEach(c => c.style.display = 'none');
+            document.getElementById('ptab-' + tab.dataset.tab).style.display = 'block';
+        });
+    });
+
+    // Sub tabs (设备报修)
+    document.querySelectorAll('.sub-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            document.querySelectorAll('.sub-tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            document.querySelectorAll('.sub-content').forEach(c => c.style.display = 'none');
+            document.getElementById('subtab-' + tab.dataset.subtab).style.display = 'block';
+        });
+    });
+
+    // V2: Toast
+    function showToast(message) {
+        const toast = document.getElementById('toast');
+        toast.textContent = message;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 2000);
+    }
+
+    // V2: Modal
+    function showModal(title, text) {
+        document.getElementById('modalTitle').textContent = title;
+        document.getElementById('modalText').textContent = text;
+        document.getElementById('modal').classList.add('show');
+    }
+
+    function closeModal() {
+        document.getElementById('modal').classList.remove('show');
+    }
+
+    // V2: Simulate Scan
+    function simulateScan() {
+        document.getElementById('snCode').value = 'RD20261008001';
+        document.getElementById('deviceModel').value = 'G-200 Pro';
+        showToast('扫码成功');
+    }
+
+    // V2: Update Char Count
+    function updateCharCount() {
+        const textarea = document.getElementById('problemDesc');
+        const count = document.getElementById('charCount');
+        count.textContent = textarea.value.length + '/200';
+    }
+
+    // V2: Simulate Upload
+    let uploadCount = 0;
+    function simulateUpload() {
+        if (uploadCount >= 3) {
+            showToast('最多上传3张图片');
+            return;
+        }
+        uploadCount++;
+        const preview = document.getElementById('imagePreview');
+        const item = document.createElement('div');
+        item.className = 'preview-item';
+        item.innerHTML = `
+            <div style="width:100%;height:100%;background:#d4e0ec;display:flex;align-items:center;justify-content:center;font-size:24px;">📷</div>
+            <div class="preview-remove" onclick="removeImage(this)">×</div>
+        `;
+        preview.appendChild(item);
+        showToast('图片上传成功');
+    }
+
+    function removeImage(btn) {
+        btn.parentElement.remove();
+        uploadCount--;
+    }
+
+    // V2: Form Validation
+    function validatePhone(phone) {
+        return /^1[3-9]\d{9}$/.test(phone);
+    }
+
+    function submitRepairForm() {
+        const sn = document.getElementById('snCode').value;
+        const model = document.getElementById('deviceModel').value;
+        const name = document.getElementById('userName').value;
+        const phone = document.getElementById('userPhone').value;
+        const region = document.getElementById('regionSelect').value;
+        const address = document.getElementById('address').value;
+        const desc = document.getElementById('problemDesc').value;
+
+        if (!sn) { showToast('请输入SN码'); return; }
+        if (!model) { showToast('请输入设备型号'); return; }
+        if (!name) { showToast('请输入姓名'); return; }
+        if (!phone) { showToast('请输入手机号码'); return; }
+        if (!validatePhone(phone)) { showToast('手机号码格式不正确'); return; }
+        if (!region) { showToast('请选择区域'); return; }
+        if (!address) { showToast('请输入详细地址'); return; }
+        if (!desc) { showToast('请输入问题描述'); return; }
+
+        showModal('提交成功', '您的报修申请已提交,工单号:WX' + Date.now().toString().slice(-10) + ',我们将尽快为您处理。');
+    }
+
+    function submitRelocateForm() {
+        showModal('提交成功', '您的移机申请已提交,工单号:YJ' + Date.now().toString().slice(-10) + ',我们将尽快为您处理。');
+    }
+</script>
+</body>
+</html>
